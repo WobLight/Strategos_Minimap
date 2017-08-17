@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: Strategos [|c0000ff00Minimap|r]
+## OptionalDependencies: StrategosCore, Strategos_WarsongGulch, Strategos_ArathiBasin, Strategos_AlteracValley
+## Notes: custom minimap for battlegrounds.
+## SavedVariables: StrategosMinimapSettings
+## Version: 0.1
+## Author: WobLight
+StrategosMinimap.lua
+XML\Minimap.xml
