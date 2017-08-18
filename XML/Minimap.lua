@@ -75,7 +75,7 @@ function StrategosMinimapDot_OnEnter()
     local nl = ""
     local text = ""
     for i = 1,n do
-        local f = getglobal("StrategosMinimapDot"..n)
+        local f = getglobal("StrategosMinimapDot"..i)
         if MouseIsOver(f) and f:IsVisible() then
             text = text .. nl .. UnitName(f.unit)
             nl = "\n"
