@@ -1,7 +1,7 @@
 # Strategos_Minimap
  Addon for WoW 1.12 (vanilla) 
  
-## Current Features:
+## Current Features
 - Independant Battlefield Minimap:
   - Raid/Party memebers colored by current health
   - Target highlight
