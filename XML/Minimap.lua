@@ -44,6 +44,95 @@ function StrategosMinimapDot_Update()
     this:SetAlpha(0.50 + p*0.50)
 end
 
+function StrategosMinimap_DotMenu(level)
+    local info = UIDropDownMenu_CreateInfo()
+    local n = GetNumRaidMembers()
+    if n == 0 then
+        n = GetNumPartyMembers()
+    end
+    for i = 1,n do
+        local f = getglobal("StrategosMinimapDot"..i)
+        if f and MouseIsOver(f) and f:IsVisible() then
+            local name = UnitName(f.unit)
+            info.text, info.func = name, function() ChatFrame_SendTell(name, DEFAULT_CHAT_FRAME)end
+            UIDropDownMenu_AddButton(info)
+        end
+    end
+end
+
+function StrategosMinimapDot_OnEnter()
+    local x, y = this:GetCenter();
+    local parentX, parentY = this:GetParent():GetCenter();
+    if ( x > parentX ) then
+        StrategosMinimapTooltip:SetOwner(this, "ANCHOR_LEFT");
+    else
+        StrategosMinimapTooltip:SetOwner(this, "ANCHOR_RIGHT");
+    end
+    local n = GetNumRaidMembers()
+    if n == 0 then
+        n = GetNumPartyMembers()
+    end
+    local nl = ""
+    local text = ""
+    for i = 1,n do
+        local f = getglobal("StrategosMinimapDot"..n)
+        if MouseIsOver(f) and f:IsVisible() then
+            text = text .. nl .. UnitName(f.unit)
+            nl = "\n"
+        end
+    end
+    StrategosMinimapTooltip:SetText(text)
+    StrategosMinimapTooltip:Show()
+end
+
+function StrategosMinimapDot_OnClick()
+    local n = GetNumRaidMembers()
+    if n == 0 then
+        n = GetNumPartyMembers()
+    end
+    local targets = {}
+    local t
+    local k = 0
+    local first
+    for i = 1,n do
+        local f = getglobal("StrategosMinimapDot"..i)
+        if MouseIsOver(f) and f:IsVisible() then
+            targets[f.unit] = true
+            k = k +1
+            if not first then
+                first = f.unit
+            end
+            if not t then
+                if not StrategosMinimap.lastDotTarget then
+                    StrategosMinimap.lastDotTarget = f.unit
+                    t = f.unit
+                else
+                    if StrategosMinimap.lastDotTarget < f.unit then
+                        t = f.unit
+                    end
+                end
+            end
+        end
+    end
+    if arg1=="LeftButton" then
+        if not t then
+            t = first
+        end
+        if targets[StrategosMinimap.lastDotTarget] and not UnitIsUnit("target", StrategosMinimap.lastDotTarget) then
+            TargetUnit(StrategosMinimap.lastDotTarget)
+        else
+            TargetUnit(t)
+            StrategosMinimap.lastDotTarget = t
+        end
+    else
+        if k < 2 then
+            ChatFrame_SendTell(UnitName(this.unit), DEFAULT_CHAT_FRAME)
+        else
+            ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,this:GetName())
+        end
+    end
+end
+
 StrategosMinimapHandles = {}
 function StrategosMinimapHandles.WORLD_MAP_UPDATE()
     StrategosMinimap_UpdateVisibility()
@@ -165,7 +254,7 @@ function StrategosMinimap_Update()
         local fn = this:GetName().."Dot"..i
         local f = getglobal(fn)
         if f == nil then
-            f = CreateFrame("frame",fn,this,"StrategosUnitDotTemplate")
+            f = CreateFrame("button",fn,this,"StrategosUnitDotTemplate")
             f.i = i
             f.texbg = getglobal(f:GetName().."Aura")
             f.tex = getglobal(f:GetName().."Normal")
@@ -176,6 +265,7 @@ function StrategosMinimap_Update()
             f:Show()
         end
         local unit = gt..i
+        f:SetID(i)
         f.unit = unit
         local x, y = (function(x,y)return x*this:GetWidth(), -y*this:GetHeight()end)(GetPlayerMapPosition(unit))
         if x == 0 and y == 0 or UnitIsUnit(unit,"player") then

@@ -1,7 +1,7 @@
  <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
     <Script file="Minimap.lua"/>
-    <Frame name="StrategosUnitDotTemplate" virtual="true">
+    <Button name="StrategosUnitDotTemplate" virtual="true" mouseEnabled="true">
         <Size x="16" y="16"/>
         <Layers>
             <Layer level="Background">
@@ -18,11 +18,23 @@
             </Layer>
         </Layers>
         <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+            </OnLoad>
             <OnUpdate>
                 StrategosMinimapDot_Update()
             </OnUpdate>
+            <OnClick>
+                StrategosMinimapDot_OnClick()
+            </OnClick>
+            <OnEnter>
+                StrategosMinimapDot_OnEnter()
+            </OnEnter>
+            <OnLeave>
+                StrategosMinimapTooltip:Hide()
+            </OnLeave>
         </Scripts>
-    </Frame>
+    </Button>
     <Frame name="StrategosMinimapAnchoring" movable="true" clampedToScreen="true" parent="UIParent">
         <Size x="234" y="154"/>
         <Anchors>
@@ -236,6 +248,14 @@
                     </OnClick>
                 </Scripts>
             </Button>
+            <GameTooltip name="StrategosMinimapTooltip" inherits="GameTooltipTemplate" />
+            <Frame name="StrategosMinimapDotMenu" inherits="UIDropDownMenuTemplate" id="2">
+                <Scripts>
+                    <OnLoad>
+                        UIDropDownMenu_Initialize(this, StrategosMinimap_DotMenu)
+                    </OnLoad>
+                </Scripts>
+            </Frame>
         </Frames>
         <Scripts>
             <OnLoad>
