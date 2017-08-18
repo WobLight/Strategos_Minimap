@@ -3,8 +3,8 @@
  
 ## Current Features:
 - Independant Battlefield Minimap:
- - Raid/Party memebers colored by current health
- - Target highlight
- - Raid marks highlights
- - Left click to target
- - Right click to whisp
+  - Raid/Party memebers colored by current health
+  - Target highlight
+  - Raid marks highlights
+  - Left click to target
+  - Right click to whisp
