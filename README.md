@@ -3,6 +3,7 @@
  
 ## Current Features
 - Independant Battlefield Minimap:
+  - Shrinkable
   - Raid/Party memebers colored by current health
   - Target highlight
   - Raid marks highlights
