@@ -1,40 +1,29 @@
  <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
     <Script file="Minimap.lua"/>
-    <Button name="StrategosUnitDotTemplate" virtual="true" mouseEnabled="true">
-        <Size x="16" y="16"/>
+    <Frame name="StrategosUnitDotTemplate" virtual="true" mouseEnabled="true">
+        <Size x="12" y="12"/>
         <Layers>
-            <Layer level="Background">
+            <Layer level="BORDER">
                 <Texture name="$parentAura" file="Interface\Addons\Strategos_Minimap\Textures\DotBackground.tga"/>
             </Layer>
             <Layer level="ARTWORK">
-                <Texture name="$parentNormal" file="Interface\Addons\Strategos_Minimap\Textures\Dot.tga"/>
-            </Layer>
-            <Layer level="Border">
                 <Texture name="$parentParty" file="Interface\Addons\Strategos_Minimap\Textures\Dot2.tga"/>
+                <Texture name="$parentNormal" file="Interface\Addons\Strategos_Minimap\Textures\Dot.tga">
+                    <Size x="8" y="8"/>
+                </Texture>
             </Layer>
-            <Layer level="Overlay">
+            <Layer level="OVERLAY">
                 <Texture name="$parentHighlight" file="Interface\Addons\Strategos_Minimap\Textures\DotHighlights.tga"/>
+                <Texture name="$parentCustom"/>
             </Layer>
         </Layers>
         <Scripts>
-            <OnLoad>
-                this:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-            </OnLoad>
             <OnUpdate>
                 StrategosMinimapDot_Update()
             </OnUpdate>
-            <OnClick>
-                StrategosMinimapDot_OnClick()
-            </OnClick>
-            <OnEnter>
-                StrategosMinimapDot_OnEnter()
-            </OnEnter>
-            <OnLeave>
-                StrategosMinimapTooltip:Hide()
-            </OnLeave>
         </Scripts>
-    </Button>
+    </Frame>
     <Frame name="StrategosMinimapAnchoring" movable="true" clampedToScreen="true" parent="UIParent">
         <Size x="234" y="154"/>
         <Anchors>
@@ -55,8 +44,26 @@
             </Anchor>
         </Anchors>
     </Frame>
-    <Frame name="StrategosMinimapOverlay" parent="UIParent">
-    </Frame>
+    <Button name="StrategosMinimapOverlay" parent="UIParent" frameLevel="3">
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+            </OnLoad>
+            <OnClick>
+                StrategosMinimapOverlay_OnClick()
+            </OnClick>
+            <OnEnter>
+                StrategosMinimapOverlay_OnEnter()
+            </OnEnter>
+            <OnLeave>
+                StrategosMinimapTooltip.update = nil
+                StrategosMinimapTooltip:Hide()
+            </OnLeave>
+            <OnUpdate>
+                StrategosMinimapTooltip_OnUpdate()
+            </OnUpdate>
+        </Scripts>
+    </Button>
     <Frame name="StrategosMinimap" parent="UIParent" hidden="true">
         <Size x="240" y="160"/>
         <Anchors>
@@ -211,12 +218,12 @@
             </Layer>
         </Layers>
         <Frames>
-            <Button name="$parentSettingsButton">
+            <Button name="$parentSettingsButton" frameLevel="4">
                 <Size x="16" y="16"/>
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentOverlay">
+                    <Anchor point="TOPRIGHT" relativeTo="$parentOverlay">
                         <Offset>
-                            <AbsDimension x="4" y="-4"/>
+                            <AbsDimension x="-4" y="-4"/>
                         </Offset>
                     </Anchor>
                 </Anchors>

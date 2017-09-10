@@ -7,3 +7,4 @@
 ## Author: WobLight
 StrategosMinimap.lua
 XML\Minimap.xml
+XML\POI.xml

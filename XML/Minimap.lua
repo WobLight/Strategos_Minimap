@@ -17,20 +17,53 @@ function StrategosMinimapDot_Update()
             t:SetVertexColor((1 - p)*2,p*2,0)
         end
     end
-    local istar = UnitIsUnit("target",unit)
+    local function getCoord(idx)
+        local x, y = mod(idx,4), floor(idx/4)
+        return {x/4,(x+1)/4,y/4,(y+1)/4}
+    end
+    
+    local tex, coords, color
+    
     local mark = GetRaidTargetIndex(unit)
-    if istar or mark then
-        colorize(this.texHigh)
+    if UnitIsUnit("target",unit) then
+        coords = getCoord(0)
+    elseif mark then
+        coords = getCoord(mark)
+    else
+        for _,p in StrategosMinimap_ActivePlugins do
+            if p.getHighlight then
+                local ptex, pcoords, pcolor = p:getHighlight(unit)
+                if ptex then
+                    tex = ptex
+                    coords = pcoords
+                elseif pcoords then
+                    tex = nil
+                    coords = getCoord(pcoords)
+                end
+                pcolor = pcolor or color
+            end
+        end
+    end
+    
+    if tex or coords then
+        this.texHigh:Show()
+    else
+        this.texHigh:Hide()
+    end
+    if this.texHigh:IsVisible() then
+        this.texHigh:SetTexture(tex and tex or "Interface\\Addons\\Strategos_Minimap\\Textures\\DotHighlights.tga")
+        if coords then
+            this.texHigh:SetTexCoord(unpack(coords))
+        end
+        if color then
+            this.texHigh:SetVertexColor(unpack(color))
+        else
+            colorize(this.texHigh)
+        end
+            
         if this.texbg then this.texbg:Hide() end
         this.tex:Hide()
-        if istar then
-            this.texHigh:SetTexCoord(0,1/4,0,1/4)
-        else
-            this.texHigh:SetTexCoord(mod(mark,4)/4,(mod(mark,4)+1)/4,floor(mark/4)/4,(floor(mark/4)+1)/4)
-        end
-        this.texHigh:Show()
-    elseif GetRaidTargetIndex(unit) then
-        
+        this:SetAlpha(1)
     else
         if UnitInParty(unit) then
             this.texParty:Show()
@@ -39,13 +72,12 @@ function StrategosMinimapDot_Update()
         end
         if this.texbg then colorize(this.texbg) this.texbg:Show() end
         this.tex:Show()
-        this.texHigh:Hide()
+        this:SetAlpha(0.50 + p*0.50)
     end
-    this:SetAlpha(0.50 + p*0.50)
 end
 
 function StrategosMinimap_DotMenu(level)
-    local info = UIDropDownMenu_CreateInfo()
+    local info = {}
     local n = GetNumRaidMembers()
     if n == 0 then
         n = GetNumPartyMembers()
@@ -58,34 +90,70 @@ function StrategosMinimap_DotMenu(level)
             UIDropDownMenu_AddButton(info)
         end
     end
-end
-
-function StrategosMinimapDot_OnEnter()
-    local x, y = this:GetCenter();
-    local parentX, parentY = this:GetParent():GetCenter();
-    if ( x > parentX ) then
-        StrategosMinimapTooltip:SetOwner(this, "ANCHOR_LEFT");
-    else
-        StrategosMinimapTooltip:SetOwner(this, "ANCHOR_RIGHT");
-    end
-    local n = GetNumRaidMembers()
-    if n == 0 then
-        n = GetNumPartyMembers()
-    end
-    local nl = ""
-    local text = ""
-    for i = 1,n do
-        local f = getglobal("StrategosMinimapDot"..i)
-        if MouseIsOver(f) and f:IsVisible() then
-            text = text .. nl .. UnitName(f.unit)
-            nl = "\n"
+    for _,p in StrategosMinimap_ActivePlugins do
+        for _,f in p.frames do
+            if MouseIsOver(f) and f:IsVisible() then
+                local infos = f:buildMenu()
+            end
         end
     end
-    StrategosMinimapTooltip:SetText(text)
-    StrategosMinimapTooltip:Show()
 end
 
-function StrategosMinimapDot_OnClick()
+function StrategosMinimapOverlay_OnEnter()
+    StrategosMinimapTooltip.last = GetTime() - 0.2
+    StrategosMinimapTooltip.update = true
+    StrategosMinimapTooltip_OnUpdate()
+end
+
+function StrategosMinimapTooltip_OnUpdate()
+    local x = GetCursorPosition()
+    local center = StrategosMinimap:GetCenter() * StrategosMinimap:GetEffectiveScale()
+    local mx, my = StrategosCore.GetCursorPosition(StrategosMinimap)
+    local offset = 8 * StrategosMinimap:GetEffectiveScale()
+    if ( x > center ) then
+        StrategosMinimapTooltip:SetOwner(StrategosMinimap, "ANCHOR_LEFT", mx - offset, offset + my - StrategosMinimap:GetHeight())
+    else
+        StrategosMinimapTooltip:SetOwner(StrategosMinimap, "ANCHOR_RIGHT", mx + offset - StrategosMinimap:GetWidth(), offset + my - StrategosMinimap:GetHeight())
+    end
+    if not StrategosMinimapTooltip.update then return end
+    if StrategosMinimapTooltip.last + 0.2 - GetTime() <= 0 then
+        local n = GetNumRaidMembers()
+        if n == 0 then
+            n = GetNumPartyMembers()
+        end
+        local nl = ""
+        local text = ""
+        local function cc(t)
+            if t and strlen(t) > 0 then
+                text = text .. nl .. t
+                nl = "\n"
+            end
+        end
+        for i = 1,n do
+            local f = getglobal("StrategosMinimapDot"..i)
+            if MouseIsOver(f) and f:IsVisible() then
+                cc(UnitName(f.unit))
+            end
+        end
+        for _,p in StrategosMinimap_ActivePlugins do
+            for _,f in p.frames do
+                if MouseIsOver(f) and f:IsVisible() then
+                    cc(f:buildTooltip())
+                end
+            end
+        end
+        for i = 1, StrategosMinimap.lastPOI or 0 do
+            local f = getglobal("StrategosMinimapPOI"..i)
+            if MouseIsOver(f) and f:IsVisible() then
+                cc(format("|c00FFFFFF%s|r", f.name.. (f.descr == "" and "" or ": "..f.descr)))
+            end
+        end
+        StrategosMinimapTooltip:SetText(text)
+        StrategosMinimapTooltip:Show()
+    end
+end
+
+function StrategosMinimapOverlay_OnClick()
     local n = GetNumRaidMembers()
     if n == 0 then
         n = GetNumPartyMembers()
@@ -121,15 +189,24 @@ function StrategosMinimapDot_OnClick()
         if targets[StrategosMinimap.lastDotTarget] and not UnitIsUnit("target", StrategosMinimap.lastDotTarget) then
             TargetUnit(StrategosMinimap.lastDotTarget)
         else
+            if not t then
+                return
+            end
             TargetUnit(t)
             StrategosMinimap.lastDotTarget = t
         end
     else
-        if k < 2 then
-            ChatFrame_SendTell(UnitName(this.unit), DEFAULT_CHAT_FRAME)
-        else
-            ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,this:GetName())
+        for _,p in StrategosMinimap_ActivePlugins do
+            for _,f in p.frames do
+                if MouseIsOver(f) and f:IsVisible() then
+                    k = k+1
+                end
+            end
         end
+        if k == 0 then
+            return
+        end
+        ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,"StrategosMinimap", StrategosCore.GetCursorPosition(this))
     end
 end
 
@@ -184,15 +261,17 @@ function StrategosMinimapHandles.WORLD_MAP_UPDATE()
                     end
                 end
                 local tox, tw, tc0, tc1 = trcr(offsetX + (256 * (k-1))), trcr(texturePixelWidth), 0, texturePixelWidth/textureFileWidth
-                if tox + tw >= 60 and tox <= 180 then
-                    if tox < 60 then
-                        tc0 = (60 - tox) / tw * tc1
-                        tox = 60
-                        tw = tw + tox - 60
-                    end
-                    if tox + tw > 180 then
-                        tc1 = (tox + tw  - 180) / tw * tc1
-                        tw = 180 - tox
+                if tox + tw >= 60 and tox <= 180 or not StrategosMinimap_Shrunk() then
+                    if StrategosMinimap_Shrunk() then
+                        if tox < 60 then
+                            tc0 = (60 - tox) / tw * tc1
+                            tox = 60
+                            tw = tw + tox - 60
+                        end
+                        if tox + tw > 180 then
+                            tc1 = (tox + tw  - 180) / tw * tc1
+                            tw = 180 - tox
+                        end
                     end
                     texture:SetWidth(tw)
                     texture:SetHeight(trcr(texturePixelHeight))
@@ -211,14 +290,43 @@ function StrategosMinimapHandles.WORLD_MAP_UPDATE()
     for i = textureCount, this.lastOverlay or 0 do
         getglobal(this:GetName().."Overlay"..i):Hide()
     end
+    StrategosMinimap_UpdatePOIs()
     StrategosMinimap_UpdateFormat()
 end
-StrategosMinimapHandles.ZONE_CHANGED_NEW_AREA =StrategosMinimapHandles.WORLD_MAP_UPDATE
-StrategosMinimapHandles.ZONE_CHANGED =StrategosMinimapHandles.WORLD_MAP_UPDATE
+StrategosMinimapHandles.ZONE_CHANGED_NEW_AREA = StrategosMinimapHandles.WORLD_MAP_UPDATE
+StrategosMinimapHandles.ZONE_CHANGED = StrategosMinimapHandles.WORLD_MAP_UPDATE
+
+function StrategosMinimap_UpdatePOIs()
+    local n = GetNumMapLandmarks()
+    for i = 1, n do
+        local name, descr, textureIndex, x, y = GetMapLandmarkInfo(i)
+        local f
+        if not StrategosMinimap.lastPOI or StrategosMinimap.lastPOI < i then
+            f = CreateFrame("frame", "StrategosMinimapPOI"..i, StrategosMinimap, "StrategosMinimapPOITemplate")
+            StrategosMinimapPOI:new(f)
+            f:GetRegions():SetTexture("Interface\\Minimap\\POIIcons")
+            StrategosMinimap.lastPOI = i
+        else
+            f = getglobal("StrategosMinimapPOI"..i)
+        end
+        f:GetRegions():SetTexCoord(WorldMap_GetPOITextureCoords(textureIndex))
+        f:SetPoint("CENTER", StrategosMinimap, "TOPLEFT", x*StrategosMinimap:GetWidth(), - y*StrategosMinimap:GetHeight())
+        f.name, f.descr = name, descr
+        f:Show()
+    end
+    for i = n+1, StrategosMinimap.lastPOI or 0 do
+        getglobal("StrategosMinimapPOI"..i):Hide()
+    end
+end
+
+StrategosMinimapHandles.UPDATE_WORLD_STATES = StrategosMinimap_UpdatePOIs
 
 function StrategosMinimap_OnLoad()
     this:SetScript("OnEvent",function() (StrategosMinimapHandles[event] or debug("STRATEGOS MINIMAP: Unhendled event "..event))()end)
     this:RegisterEvent("WORLD_MAP_UPDATE")
+    this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    this:RegisterEvent("ZONE_CHANGED")
+    this:RegisterEvent("UPDATE_WORLD_STATES")
     CreateMiniWorldMapArrowFrame(StrategosMinimap)
 end
     
@@ -260,7 +368,8 @@ function StrategosMinimap_Update()
             f.tex = getglobal(f:GetName().."Normal")
             f.texParty = getglobal(f:GetName().."Party")
             f.texHigh = getglobal(f:GetName().."Highlight")
-            f.texFlag = getglobal(f:GetName().."Flag")
+            f.texCustom = getglobal(f:GetName().."Custom")
+            f.action = function (self) ChatFrame_SendTell(UnitName(self.unit), DEFAULT_CHAT_FRAME) end
         else
             f:Show()
         end
@@ -278,7 +387,7 @@ function StrategosMinimap_Update()
 end
 
 function StrategosMinimap_SettingsMenu(level)
-    local info = UIDropDownMenu_CreateInfo()
+    local info = {}
     if level == 1 then
         info.text, info.hasArrow = "Format", true
         UIDropDownMenu_AddButton(info)
@@ -286,12 +395,21 @@ function StrategosMinimap_SettingsMenu(level)
         UIDropDownMenu_AddButton(info)
         info.text, info.hasArrow, info.checked, info.func = "Party/Raid only", false, StrategosMinimapSettings.groupOnly, StrategosMinimap_ToggleGroupOnly
         UIDropDownMenu_AddButton(info)
+        if next(StrategosMinimap_Plugins) then
+            info.text, info.hasArrow, info.checked, info.title, info.func = "Plugins", true, false, true, nil
+            UIDropDownMenu_AddButton(info)
+        end
     elseif UIDROPDOWNMENU_MENU_VALUE == "Format" then
         info.text, info.hasArrow, info.checked, info.enabled, info.keepShownOnClick, info.func = "Narrow", true, StrategosMinimapSettings.shrunk, StrategosMinimapSettings.shrunk, true, StrategosMinimap_ToggleShrink
         UIDropDownMenu_AddButton(info,2)
     elseif UIDROPDOWNMENU_MENU_VALUE == "Narrow" then
         info.text, info.checked, info.keepShownOnClick, info.func = "Animated", StrategosMinimapSettings.animatedBorder, true, StrategosMinimap_ToggleAnimatedBorder
         UIDropDownMenu_AddButton(info,3)
+    elseif UIDROPDOWNMENU_MENU_VALUE == "Plugins" then
+        for i,p in StrategosMinimap_Plugins do
+            info.text, info.checked, info.keepShownOnClick, info.func, info.arg1 = p.name, not StrategosMinimapSettings.pluginBlacklist[p.name], true, StrategosMinimap_TogglePlugin, p.name
+            UIDropDownMenu_AddButton(info,2)
+        end
     end
 end
 
@@ -330,7 +448,10 @@ function StrategosMinimap_GetCurrentAnchoring()
 end
 
 function StrategosMinimap_UpdateAnchoringAndSize()
-    StrategosMinimapOverlay:SetAllPoints(StrategosMinimap_GetCurrentAnchoring())
+    local a = StrategosMinimap_GetCurrentAnchoring()
+    StrategosMinimapOverlay:SetPoint("CENTER",a)
+    StrategosMinimapOverlay:SetWidth(a:GetWidth())
+    StrategosMinimapOverlay:SetHeight(a:GetHeight())
 end
 
 function StrategosMinimap_CurrentBorder()
