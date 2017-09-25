@@ -293,8 +293,16 @@ function StrategosMinimapHandles.WORLD_MAP_UPDATE()
     StrategosMinimap_UpdatePOIs()
     StrategosMinimap_UpdateFormat()
 end
-StrategosMinimapHandles.ZONE_CHANGED_NEW_AREA = StrategosMinimapHandles.WORLD_MAP_UPDATE
-StrategosMinimapHandles.ZONE_CHANGED = StrategosMinimapHandles.WORLD_MAP_UPDATE
+
+function StrategosMinimapHandles.ZONE_CHANGED_NEW_AREA()
+    SetMapToCurrentZone()
+    StrategosMinimapHandles.WORLD_MAP_UPDATE()
+end
+
+function StrategosMinimapHandles.ZONE_CHANGED()
+    SetMapToCurrentZone()
+    StrategosMinimapHandles.WORLD_MAP_UPDATE()
+end
 
 function StrategosMinimap_UpdatePOIs()
     local n = GetNumMapLandmarks()
