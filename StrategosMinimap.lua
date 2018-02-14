@@ -14,7 +14,11 @@ local StrategosMinimapSettingsDefaults = {
     animatedBorder = true,
     battlegroundOnly = false,
     groupOnly = false,
-    pluginBlacklist = {}
+    pluginBlacklist = {},
+    scale = 1,
+    scaleShrunk = 1,
+    poiScale = 1,
+    unitScale = 1
 }
 
 function StrategosMinimap_Print(t)
@@ -49,6 +53,9 @@ local function loader()
         setmetatable(StrategosMinimapSettings, {__index = StrategosMinimapSettingsDefaults})
         
         StrategosMinimap_UpdateFormat()
+        StrategosMinimap_SetScale(StrategosMinimapSettings.scale)
+        StrategosMinimap_SetPOIScale(StrategosMinimapSettings.poiScale)
+        StrategosMinimap_SetUnitScale(StrategosMinimapSettings.unitScale)
         
         StrategosMinimap:Show()
         StrategosMinimap_Print("loaded.")

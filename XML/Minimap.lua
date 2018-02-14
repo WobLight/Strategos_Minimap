@@ -313,12 +313,17 @@ function StrategosMinimap_UpdatePOIs()
             f = CreateFrame("frame", "StrategosMinimapPOI"..i, StrategosMinimap, "StrategosMinimapPOITemplate")
             StrategosMinimapPOI:new(f)
             f:GetRegions():SetTexture("Interface\\Minimap\\POIIcons")
+            f:SetScale(StrategosMinimapSettings.poiScale)
+            f.anchor = CreateFrame("frame",f:GetName().."Anchor",f:GetParent())
+            f.anchor:SetWidth(1)
+            f.anchor:SetHeight(1)
+            f:SetPoint("CENTER",f.anchor)
             StrategosMinimap.lastPOI = i
         else
             f = getglobal("StrategosMinimapPOI"..i)
         end
         f:GetRegions():SetTexCoord(WorldMap_GetPOITextureCoords(textureIndex))
-        f:SetPoint("CENTER", StrategosMinimap, "TOPLEFT", x*StrategosMinimap:GetWidth(), - y*StrategosMinimap:GetHeight())
+        f.anchor:SetPoint("CENTER", StrategosMinimap, "TOPLEFT", x*StrategosMinimap:GetWidth(), - y*StrategosMinimap:GetHeight())
         f.name, f.descr = name, descr
         f:Show()
     end
@@ -378,6 +383,11 @@ function StrategosMinimap_Update()
             f.texHigh = getglobal(f:GetName().."Highlight")
             f.texCustom = getglobal(f:GetName().."Custom")
             f.action = function (self) ChatFrame_SendTell(UnitName(self.unit), DEFAULT_CHAT_FRAME) end
+            f.anchor = CreateFrame("frame",f:GetName().."Anchor",f:GetParent())
+            f.anchor:SetWidth(1)
+            f.anchor:SetHeight(1)
+            f:SetPoint("CENTER",f.anchor)
+            f:SetScale(StrategosMinimapSettings.unitScale)
         else
             f:Show()
         end
@@ -390,7 +400,7 @@ function StrategosMinimap_Update()
         else
             f:Show()
         end
-        f:SetPoint("CENTER",this,"TOPLEFT", x, y)
+        f.anchor:SetPoint("CENTER",this,"TOPLEFT", x, y)
     end
 end
 
@@ -506,4 +516,33 @@ function StrategosMinimap_UpdateFormat()
     end
     StrategosMinimap_UpdateBorder()
     StrategosMinimap_UpdateAnchoringAndSize()
+    StrategosMinimap_UpdateScale()
+end
+
+function StrategosMinimap_UpdateScale()
+    local s = StrategosMinimap_Shrunk() and "scaleShrunk" or "scale"
+    StrategosMinimap:SetScale(StrategosMinimapSettings[s])
+    StrategosMinimapOverlay:SetScale(StrategosMinimapSettings[s])
+end
+
+function StrategosMinimap_SetPOIScale(s)
+    for i = 1, StrategosMinimap.lastPOI or 0 do
+        getglobal("StrategosMinimapPOI"..i):SetScale(s)
+    end
+    StrategosMinimapSettings.poiScale = s
+end
+
+function StrategosMinimap_SetUnitScale(s)
+    for i = 1, 40 do
+        local f = getglobal("StrategosMinimapDot"..i)
+        if not f then return end
+        
+        f:SetScale(s)
+    end
+    StrategosMinimapSettings.unitScale = s
+end
+
+function StrategosMinimap_SetScale(s)
+    StrategosMinimapSettings[StrategosMinimap_Shrunk() and "scaleShrunk" or "scale"] = s
+    StrategosMinimap_UpdateScale()
 end
