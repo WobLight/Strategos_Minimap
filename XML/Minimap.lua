@@ -107,13 +107,14 @@ end
 
 function StrategosMinimapTooltip_OnUpdate()
     local x = GetCursorPosition()
-    local center = StrategosMinimap:GetCenter() * StrategosMinimap:GetEffectiveScale()
-    local mx, my = StrategosCore.GetCursorPosition(StrategosMinimap)
-    local offset = 8 * StrategosMinimap:GetEffectiveScale()
+    local a = StrategosMinimap_GetCurrentAnchoring()
+    local center = a:GetCenter() * a:GetEffectiveScale()
+    local mx, my = StrategosCore.GetCursorPosition(a)
+    local offset = 4
     if ( x > center ) then
-        StrategosMinimapTooltip:SetOwner(StrategosMinimap, "ANCHOR_LEFT", mx - offset, offset + my - StrategosMinimap:GetHeight())
+        StrategosMinimapTooltip:SetOwner(a , "ANCHOR_LEFT", mx - offset, offset + my - a:GetHeight())
     else
-        StrategosMinimapTooltip:SetOwner(StrategosMinimap, "ANCHOR_RIGHT", mx + offset - StrategosMinimap:GetWidth(), offset + my - StrategosMinimap:GetHeight())
+        StrategosMinimapTooltip:SetOwner(a , "ANCHOR_RIGHT", mx + offset - a:GetWidth(), offset + my - a:GetHeight())
     end
     if not StrategosMinimapTooltip.update then return end
     if StrategosMinimapTooltip.last + 0.2 - GetTime() <= 0 then
@@ -206,7 +207,7 @@ function StrategosMinimapOverlay_OnClick()
         if k == 0 then
             return
         end
-        ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,"StrategosMinimap", StrategosCore.GetCursorPosition(this))
+        ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,"UIParent", StrategosCore.GetCursorPosition(UIParent))
     end
 end
 

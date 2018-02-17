@@ -255,8 +255,8 @@
                     </OnClick>
                 </Scripts>
             </Button>
-            <GameTooltip name="StrategosMinimapTooltip" inherits="GameTooltipTemplate" />
-            <Frame name="StrategosMinimapDotMenu" inherits="UIDropDownMenuTemplate" id="2">
+            <GameTooltip name="StrategosMinimapTooltip" inherits="GameTooltipTemplate" parent="UIParent"/>
+            <Frame name="StrategosMinimapDotMenu" inherits="UIDropDownMenuTemplate" parent="UIParent" id="2">
                 <Scripts>
                     <OnLoad>
                         UIDropDownMenu_Initialize(this, StrategosMinimap_DotMenu)
