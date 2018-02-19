@@ -16,9 +16,13 @@ local StrategosMinimapSettingsDefaults = {
     groupOnly = false,
     pluginBlacklist = {},
     scale = 1,
-    scaleShrunk = 1,
     poiScale = 1,
-    unitScale = 1
+    unitScale = 1,
+    shrunkSettings = {
+        scale = 1,
+        poiScale = 1,
+        unitScale = 1
+    }
 }
 
 function StrategosMinimap_Print(t)
@@ -43,14 +47,13 @@ function StrategosMinimap_LoadPlugins()
     end
     frame:UnregisterEvent("ADDON_LOADED")
 end
-    
 
 local function loader()
     if arg1 == "Strategos_Minimap" then
         if StrategosMinimapSettings == nil then
             StrategosMinimapSettings = {dataVersion = "1.0.0"}
         end
-        setmetatable(StrategosMinimapSettings, {__index = StrategosMinimapSettingsDefaults})
+        StrategosCore.buildDefaults(StrategosMinimapSettings, StrategosMinimapSettingsDefaults)
         
         StrategosMinimap_UpdateFormat()
         

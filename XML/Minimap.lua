@@ -314,7 +314,7 @@ function StrategosMinimap_UpdatePOIs()
             f = CreateFrame("frame", "StrategosMinimapPOI"..i, StrategosMinimap, "StrategosMinimapPOITemplate")
             StrategosMinimapPOI:new(f)
             f:GetRegions():SetTexture("Interface\\Minimap\\POIIcons")
-            f:SetScale(StrategosMinimapSettings.poiScale)
+            f:SetScale(StrategosMinimap_FormatSettings().poiScale)
             f.anchor = CreateFrame("frame",f:GetName().."Anchor",f:GetParent())
             f.anchor:SetWidth(1)
             f.anchor:SetHeight(1)
@@ -388,7 +388,7 @@ function StrategosMinimap_Update()
             f.anchor:SetWidth(1)
             f.anchor:SetHeight(1)
             f:SetPoint("CENTER",f.anchor)
-            f:SetScale(StrategosMinimapSettings.unitScale)
+            f:SetScale(StrategosMinimap_FormatSettings().unitScale)
         else
             f:Show()
         end
@@ -518,32 +518,46 @@ function StrategosMinimap_UpdateFormat()
     StrategosMinimap_UpdateBorder()
     StrategosMinimap_UpdateAnchoringAndSize()
     StrategosMinimap_UpdateScale()
+    StrategosMinimap_UpdatePOIScale()
+    StrategosMinimap_UpdateUnitScale()
+end
+
+function StrategosMinimap_FormatSettings()
+    return StrategosMinimap_Shrunk() and StrategosMinimapSettings.shrunkSettings or StrategosMinimapSettings
 end
 
 function StrategosMinimap_UpdateScale()
-    local s = StrategosMinimap_Shrunk() and "scaleShrunk" or "scale"
-    StrategosMinimap:SetScale(StrategosMinimapSettings[s])
-    StrategosMinimapOverlay:SetScale(StrategosMinimapSettings[s])
+    StrategosMinimap:SetScale(StrategosMinimap_FormatSettings().scale)
+    StrategosMinimapOverlay:SetScale(StrategosMinimap_FormatSettings().scale)
+    
+end
+
+function StrategosMinimap_UpdatePOIScale()
+    for i = 1, StrategosMinimap.lastPOI or 0 do
+        getglobal("StrategosMinimapPOI"..i):SetScale(StrategosMinimap_FormatSettings().poiScale)
+    end
 end
 
 function StrategosMinimap_SetPOIScale(s)
-    for i = 1, StrategosMinimap.lastPOI or 0 do
-        getglobal("StrategosMinimapPOI"..i):SetScale(s)
-    end
-    StrategosMinimapSettings.poiScale = s
+    StrategosMinimap_FormatSettings().poiScale = s
+    StrategosMinimap_UpdatePOIScale()
 end
 
-function StrategosMinimap_SetUnitScale(s)
+function StrategosMinimap_UpdateUnitScale()
     for i = 1, 40 do
         local f = getglobal("StrategosMinimapDot"..i)
         if not f then return end
         
-        f:SetScale(s)
+        f:SetScale(StrategosMinimap_FormatSettings().unitScale)
     end
-    StrategosMinimapSettings.unitScale = s
+end
+
+function StrategosMinimap_SetUnitScale(s)
+    StrategosMinimap_FormatSettings().unitScale = s
+    StrategosMinimap_UpdateUnitScale()
 end
 
 function StrategosMinimap_SetScale(s)
-    StrategosMinimapSettings[StrategosMinimap_Shrunk() and "scaleShrunk" or "scale"] = s
+    StrategosMinimap_FormatSettings().scale = s
     StrategosMinimap_UpdateScale()
 end
