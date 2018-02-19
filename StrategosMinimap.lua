@@ -53,9 +53,6 @@ local function loader()
         setmetatable(StrategosMinimapSettings, {__index = StrategosMinimapSettingsDefaults})
         
         StrategosMinimap_UpdateFormat()
-        StrategosMinimap_SetScale(StrategosMinimapSettings.scale)
-        StrategosMinimap_SetPOIScale(StrategosMinimapSettings.poiScale)
-        StrategosMinimap_SetUnitScale(StrategosMinimapSettings.unitScale)
         
         StrategosMinimap:Show()
         StrategosMinimap_Print("loaded.")
