@@ -207,7 +207,14 @@ function StrategosMinimapOverlay_OnClick()
         if k == 0 then
             return
         end
-        ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu,"UIParent", StrategosCore.GetCursorPosition(UIParent))
+        local ma = StrategosMinimapMenuAnchor
+        if not ma then
+            ma = CreateFrame("frame", "StrategosMinimapMenuAnchor", UIParent)
+            ma:SetWidth(32)
+            ma:SetHeight(32)
+        end
+        ma:SetPoint("CENTER",UIParent, StrategosCore.GetCursorPosition(UIParent))
+        ToggleDropDownMenu(1,nil,StrategosMinimapDotMenu, ma:GetName(), StrategosCore.GetCursorPosition(ma))
     end
 end
 
