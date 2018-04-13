@@ -124,6 +124,7 @@ function StrategosMinimapTooltip_OnUpdate()
         end
         local nl = ""
         local text = ""
+        local nrm = 0
         local function cc(t)
             if t and strlen(t) > 0 then
                 text = text .. nl .. t
@@ -134,8 +135,10 @@ function StrategosMinimapTooltip_OnUpdate()
             local f = getglobal("StrategosMinimapDot"..i)
             if MouseIsOver(f) and f:IsVisible() then
                 cc(UnitName(f.unit))
+                nrm = nrm +1
             end
         end
+        if nrm > 5 then cc(format("|c0000ff00%s members|r",nrm)) end
         for _,p in StrategosMinimap_ActivePlugins do
             for _,f in p.frames do
                 if MouseIsOver(f) and f:IsVisible() then
